@@ -1,0 +1,130 @@
+﻿body{
+    font-size: 12px;
+}
+table{
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+#box{
+    width: 765px;
+    margin: 0 auto;
+}
+.dialog{
+display: none;
+position: fixed;
+width: 300px;
+background-color: white;
+box-shadow: 0px 0px 10px 0px;
+border-radius: 3px;
+padding: 0 20px;
+top: 20vh;
+left: 50%;
+transition: 1s;
+transform: translateX(-50%);
+}
+#dialogSpan{
+    position: relative;
+    top: -255px;
+    left: 290px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    cursor: pointer;
+    background-image: url(../image/cha.png);
+    transition: .5s;
+}
+#dialogSpan:hover{
+    background-image: url(../image/cha1.png);
+}
+.dialog select{
+    width:108px
+}
+tr{
+    height: 40px;
+}
+p input{
+    width: 100px;
+}
+.searchbtn{
+    background-color: #343A40;
+    color: white;
+    padding: 5px 10px;
+}
+.addbtn{
+    background-color: #0D6EFD;
+    padding: 5px 5px; 
+    color: white;
+    margin-left: 160px;
+}
+.delAllbtn{
+    background-color: #DC3545;
+    color:white;
+    padding: 5px 10px;
+}
+#editBtn{
+    background-color: #0D6EFD;
+    color: white;
+    padding: 4px 10px;
+    margin-left: 3px;
+}
+#delBtn{
+    background-color: #DC3545;
+    color: white;
+    padding: 4px 10px;
+    margin-left: 3px;
+}
+#okBtn,#noBtn{
+    color:white;
+    width: 45px;
+    height: 25px;
+}
+#okBtn{
+    background-color: #0D6EFD;
+}
+#noBtn{
+    background-color: #DC3545;
+}
+#pager{
+    display: inline-block;
+    margin-left: 460px;
+}
+#pager button{
+    margin-left: 10px;
+    padding: 7px 20px;
+    background-color: #F0F0F0;
+}
+button{
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+button:disabled{
+    cursor: not-allowed;
+}
+.sort{
+position: relative;
+padding-right: 10px;
+cursor: pointer;
+user-select: none;
+}
+.sort::before,
+.sort::after{
+position: absolute;
+font-size: 12px;
+right: 0;
+transform: scale(.8);
+}
+.sort::before{
+content: "▲";
+top: 1px;
+}
+.sort::after{
+content: "▼";
+bottom: 2px;
+}
+.sort.asc::before{
+color: red;
+}
+.sort.desc::after{
+color: red;
+} 

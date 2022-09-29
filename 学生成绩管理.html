@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生成绩管理</title>
+    <link rel="stylesheet" href="./css/system.css">
+</head>
+<body>
+    <div id="box">
+        <h1 style="text-align: center;">学生成绩管理</h1>
+        <p>
+        <select id="major" oninput="search(this,'zy')">
+            <option>请选择专业</option>
+        </select>
+        <select  id="course" oninput="search(this,'km')">
+            <option>请选择科目</option>
+        </select>
+        <input type="search"  placeholder="输入学号/姓名" oninput="search(this,'keywords')">
+        <input type="number" step="10" placeholder="起始分数" oninput="search(this,'min')">
+        <input type="number" step="10" placeholder="结束分数" oninput="search(this,'max')">
+        <button class="searchbtn">搜索</button>
+        <button class="addbtn" onclick="openDialog('add')">+&nbsp;&nbsp;新增</button>
+    </p>
+    <table border="1">
+        <thead>
+            <tr style="height: 35px;text-align: left;">
+                <th width="65" align="left"><input type="checkbox" onchange="checkAll(this)"></th>
+                <th width="120" class="sort" onclick="orderBy(this,'no','string')">学号</th>
+                <th width="65">专业</th>
+                <th width="65">科目</th>
+                <th width="75px">姓名</th>
+                <th width="75px" class="sort" onclick="orderBy(this,'score','number')">得分</th>
+                <th width="150px">考试时间</th>
+                <th width="100px">操作</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            
+        </tbody>
+        
+    </table>
+    <div><button class="delAllbtn" onclick="delAll()">批量删除</button><span id="pager"></span></div>
+    </div>
+    
+
+    <!-- js自定义弹层 -->
+<div id="dialog" class="dialog" >
+    <h4 id="title">成绩管理</h4>
+    <form id="myform" autocomplete="off">
+      <p>
+        <label>学号：</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="text" id="noName">
+      </p>
+      <p>
+        <label>专业：</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <select  id="zyName">
+          <option >请选择专业</option>
+          <!-- <option >软件工程</option>
+          <option>土木工程</option> -->
+        </select>
+      </p>
+      <p>
+        <label>科目：</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <select  id="kmName">
+          <option value="">请选择科目</option>
+          <!-- <option>C语言</option>
+          <option>数据结构</option>
+          <option>高等数学</option>
+          <option>大学物理</option>
+          <option>毛概</option> -->
+        </select>
+      </p>
+      <p>
+        <label>姓名：</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="text" id="nName">
+      </p>
+      <p>
+        <label>得分：</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="number" id="scoreName">
+      </p>
+      <p>
+        <label>考试时间：</label>
+        <input type="date" id="timeName">
+      </p>
+      <p align="right">
+        <button id="okBtn" type="button" onclick="saveForm()">确定</button>
+        <button id="noBtn" type="button" onclick="hideDialog()">取消</button>
+      </p>
+    </form>
+    <span onclick="dialogSpan()" id="dialogSpan"></span>
+  </div>
+
+  
+    <script>
+        //成绩表
+    var student = [
+    {id:1, mid: 1, sid: 11, no: '20190122', name:'张飞', gender: '男', score: 47, submitdate: '2021-06-05'},
+    {id:2, mid: 1, sid: 11, no: '20190221', name:'小乔', gender: '女', score: 78, submitdate: '2021-03-02'},
+    {id:3, mid: 1, sid: 13, no: '20190324', name:'大乔', gender: '女', score: 57, submitdate: '2021-04-01'},
+    {id:4, mid: 2, sid: 21, no: '20193126', name:'马超', gender: '男', score: 87, submitdate: '2021-07-06'},
+    {id:5, mid: 2, sid: 22, no: '20194221', name:'貂蝉', gender: '女', score: 97, submitdate: '2021-08-03'},
+    {id:6, mid: 2, sid: 23, no: '20196121', name:'张飞', gender: '男', score: 67, submitdate: '2021-03-06'},
+    {id:7, mid: 1, sid: 13, no: '20195123', name:'小乔', gender: '女', score: 98, submitdate: '2021-04-09'},
+    {id:8, mid: 1, sid: 11, no: '20197124', name:'马超', gender: '男', score: 78, submitdate: '2021-05-13'},
+    ];
+        //科目表
+    var subject = [
+    {
+        id:1, 
+        name: '软件工程', 
+        children: [
+        {id: 11, name: 'C语言'},
+        {id: 12, name: 'Java'},
+        {id: 13, name: '数据结构'},
+        ] 
+    },
+    {
+        id:2, 
+        name: '土木工程', 
+        children: [
+        {id: 21, name: '高等数学'},
+        {id: 22, name: '大学物理'},
+        {id: 23, name: '毛概'},
+        ]
+    },
+    ];
+
+    // 全局变量
+    // 修改相关字段
+    var action='';
+    var editId=0;
+    // 搜索相关字段
+    var km='';
+    var zy=''
+    var keywords='';
+    var min='';
+    var max='';
+
+    // 排序相关
+    var prevBtn=null;
+    var orderField='';
+    var orderType='';
+    var orderMethod='';
+
+    // 页码相关
+    var cpage=1;
+    var pagesize=5;
+    // 全选
+    var checkedVal=[]
+    
+    // 获取学科和专业
+    student.forEach(function(item){
+      subject.forEach(function(item1){
+        if(item.mid==item1.id){
+          item.mid=item1.name
+        }
+        item1.children.forEach(function(item2){
+          if(item.sid==item2.id){
+            item.sid=item2.name
+          }
+        })
+      })
+      return item
+    })
+    
+
+    view(cpage)
+    function view(page){
+        // 搜索
+        var searchData=student.filter(function(item){
+            return (item.name.toUpperCase().includes(keywords.toUpperCase()) || item.no.toString().includes(keywords))&&
+            (min ? item.score>=min : true)  && 
+            (max ? item.score<=max :true) &&
+            (item.mid.includes(zy) && item.sid.includes(km))
+
+        })
+
+        // 排序
+        if(orderField && orderType && orderMethod){
+            searchData.sort(function(a,b){
+                if(orderType==='number'){
+                    return (a[orderField]-b[orderField]) *orderMethod;
+                }else{
+                    return a[orderField].toString().localeCompare(b[orderField].toString()) *orderMethod
+                }
+            })
+        }
+
+        // 分页
+        var pagecount=Math.ceil(searchData.length / pagesize);  //总页数
+        var start=(page-1)*pagesize;
+        var end=start+pagesize
+
+
+        tbody.innerHTML=searchData.reduce(function(temp,item,index){
+            return temp+ '<tr style="display:'+(index>=start && index<end ? 'table-row':'none')+';background-color:'+(index%2==0? '#F0F0F0':'')+'">\
+                <td><input type="checkbox" onchange="idChange(this)" name="id" value='+item.id+'></td>\
+                <td>'+item.no+'</td>\
+                <td>'+item.mid+'</td>\
+                <td>'+item.sid+'</td>\
+                <td>'+item.name+'</td>\
+                <td>'+item.score+'</td>\
+                <td>'+item.submitdate+'</td>\
+                <td><button id="editBtn"  onclick="openDialog(\'edit\', '+item.id+')">修改</button><button id="delBtn" onclick="del('+item.id+')">删除</button></td>\
+            </tr>'
+        },'') || '<tr><td align="center" colspan="999">暂无数据！</td></tr>';
+
+
+
+
+        var pageTemp = '<button onclick="view('+(page-1)+')" '+(page===1 && 'disabled')+'>&lt;</button>';
+        for( var p=1; p <= pagecount; p++ ){
+            pageTemp += '<button style="color:'+(p==page?'white':'')+';background-color:'+(p==page? '#0D6EFD':'')+'" onclick="view('+p+')">'+p+'</button>';
+    }
+        pageTemp += '<button onclick="view('+(page+1)+')" '+( (!pagecount || page === pagecount) && 'disabled' )+'>&gt;</button>';
+
+
+            pager.innerHTML=pageTemp
+            console.log(pagecount);
+    }
+
+    
+
+
+
+
+    // 搜索
+    function search(input,field){
+        window[field]=input.value.trim();
+        view(cpage)
+    }
+    
+    // 排序切换
+    function orderBy(th,field,type){
+        if(prevBtn && prevBtn !== th ){
+    prevBtn.className = 'sort';
+    }
+    prevBtn = th;
+
+    var method = 0;
+    if( th.className == 'sort' ){
+    th.className = 'sort asc';
+    method = 1;
+    }else if(th.className == 'sort asc'){
+    th.className = 'sort desc';
+    method = -1;
+    } else{
+    th.className = 'sort';
+    method = 0;
+    }
+
+  //更新排序全局变量
+    orderField = field;
+    orderType = type;
+    orderMethod = method;
+
+  //刷新
+    view(1);
+}
+
+    // 删除单项
+    function del(id){
+        if(confirm('您确定要删除吗？')){
+            student=student.filter(function(item){
+                return item.id!==id
+            })
+        }
+        view(cpage)
+    }
+
+
+        // 设置全选
+        function checkAll(input){
+            document.querySelectorAll('[name="id"]').forEach(function(checkbox){
+                checkbox.checked=input.checked;
+                // 循环通过代码去自动触发每个[name="id"]复选框的change事件
+                checkbox.dispatchEvent(new Event('idChange'))
+            })
+        
+            checkedVal = student.filter(function(){
+      return input.checked;
+    }).map(function(item){
+      return item.id;
+    })
+}
+        function idChange(input){
+            var id=Number(input.value);
+            if(input.checked){
+                checkedVal.push(id)
+            }else{
+                checkedVal=checkedVal.filter(function(val){
+                    return val!==id
+                })
+            }
+        }
+
+        // 批量删除
+    function delAll(){
+        if(!checkedVal.length){
+            alert('请至少选一个！')
+            return;
+        }
+        if(confirm('您确定要删除吗？')){
+            student=student.filter(function(item){
+                return !checkedVal.includes(item.id);
+            })
+        }
+        view(1);
+    }
+
+
+
+
+    // 打开弹层
+function openDialog( flag, id ){
+
+action = flag; //把添加或者修改意图 缓存到全局变量action，因为下面的saveForm函数不能直接去拿openDialog
+editId = id;   //将修改的id 缓存全局变量editId，方便后面saveForm函数调用(跨函数调用)
+
+title.innerText = (action ==='add'?'新增':'修改') + '成绩';
+
+
+if(action === 'edit'){
+  //如果是修改
+  var row = student.find(function(item){
+    return item.id === id;
+  })
+
+  //将信息读取到文本框内
+  noName.value = row.no;
+  zyName.value=row.mid;
+  kmName.value=row.sid;
+  nName.value = row.name;
+  scoreName.value = row.score;
+  timeName.value = row.submitdate;
+  
+
+}else{
+  //如果是添加，那么找到表单对象，调用它重置方法，这样可以清空
+  myform.reset();
+}
+
+dialog.style.display='block';
+
+
+
+}
+
+
+// 隐藏弹层
+function hideDialog(){
+  dialog.style.display='none';
+}
+
+//保存表单（添加和修改）
+function saveForm(){
+  var noVal = Number(noName.value.trim());
+  var zyVal=String(zyName.value)
+  var kmVal=String(kmName.value)
+  var nameVal = nName.value.trim();
+  var scoreVal = Number(scoreName.value);
+  var timeVal = String(timeName.value);
+
+  if( nameVal == '' ){
+    alert('请输入学号');
+    noName.focus(); //获得焦点，就是让文本框得到光标
+    return;
+  }
+
+  if( nameVal == '' ){
+    alert('请输入姓名');
+    nName.focus(); //获得焦点，就是让文本框得到光标
+    return;
+  }
+
+  if( action === 'add' ){
+    //添加到开头
+    student.unshift({
+      no: noVal,
+      mid:zyVal,
+      sid:kmVal,
+      name: nameVal,
+      score: scoreVal,
+      submitdate: timeVal
+    })
+
+    //显式第1页
+    cpage = 1;
+  }else{
+    //修改 map返回新数组，所有要覆盖一下
+    student = student.map(function(item){
+      if( item.id === editId ){
+        item.no = noVal;
+        item.mid=zyVal,
+        item.sid=kmVal,
+        item.name = nameVal;
+        item.score = scoreVal;
+        item.submitdate = timeVal;
+      }
+      return item;
+    })
+  }
+
+  //刷新页面
+  view( cpage );
+
+  //隐藏弹层
+  hideDialog();
+
+}
+function dialogSpan(){
+    hideDialog()
+}
+
+
+
+        // select
+        showOptions(subject,major,'请选择专业')
+        function showOptions(arr,target,label){
+            target.innerHTML=arr.reduce(function(temp,item){
+                return temp+'<option>'+item.name+'</option>'
+            },'<option>'+label+'</option>')
+        }
+
+        major.onchange=function(){
+            var pchildren=[];
+            var cchildren=[];
+            
+            var pindex=this.selectedIndex-1;
+            if(pindex!=-1) pchildren =subject[pindex].children;
+            showOptions(pchildren,course,'请选择科目')
+            
+            
+
+            
+            course.onchange=function(){
+            
+            var cindex=this.selectedIndex-1;
+            if(cindex!=-1){
+                cchildren=pchildren[cindex].children || [];
+            }
+            
+        }
+        view(1)
+
+        }
+        showOptions(subject,zyName,'请选择专业')
+        function showOptions(arr,target,label){
+            target.innerHTML=arr.reduce(function(temp,item){
+                return temp+'<option>'+item.name+'</option>'
+            },'<option>'+label+'</option>')
+        }
+
+        zyName.onchange=function(){
+            var pchildren=[];
+            var cchildren=[];
+            
+            var pindex=this.selectedIndex-1;
+            if(pindex!=-1) pchildren =subject[pindex].children;
+            showOptions(pchildren,kmName,'请选择科目')
+            
+            
+
+            
+            kmName.onchange=function(){
+            
+            var cindex=this.selectedIndex-1;
+            if(cindex!=-1){
+                cchildren=pchildren[cindex].children || [];
+            }
+            
+        }
+        view(1)
+
+        }
+    </script>
+    
+
+</body>
+</html>
